@@ -1,9 +1,11 @@
 var RepoLine = React.createClass({
     render: function() {
         return (
-            <ReactBootstrap.Row>
+            <ReactBootstrap.Row className="repoRow">
                 <ReactBootstrap.Col xs={12} sm={6}>
-                    {this.props.project}
+                    <div className="repoName">
+                        {this.props.project}
+                    </div>
                 </ReactBootstrap.Col>
                 <ReactBootstrap.Col xs={12} sm={3}>
                     <ReactBootstrap.Button>Commit/Push</ReactBootstrap.Button>
@@ -25,17 +27,31 @@ var RepoList = React.createClass({
         this.loadReposFromServer();
     },
 
+    loadReposFromServer: function() {
+        $.ajax({
+            url: this.props.geturl,
+            dataType: 'json',
+            cache: false,
+            success: function(data) {
+                this.setState({repos: data});
+            }.bind(this),
+            error: function(xhr, status, err) {
+                console.error(this.props.geturl, status, err.toString());
+            }.bind(this)
+        });
+    },
+
     render: function() {
         var repoNodes = this.state.repos.map(function(repo) {
             return (
-                <RepoLine project={repo.name} key={repo.key}>
+                <RepoLine project={repo.name} key={repo.name}>
 
                 </RepoLine>
             );
         });
 
         return (
-            <ReactBootstrap.Panel>
+            <ReactBootstrap.Panel className="repoList">
                 {repoNodes}
             </ReactBootstrap.Panel>
         );
@@ -43,6 +59,6 @@ var RepoList = React.createClass({
 });
 
 ReactDOM.render(
-    <RepoList />,
+    <RepoList geturl='/repos' />,
     document.getElementById('content')
 );
