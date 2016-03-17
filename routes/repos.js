@@ -21,7 +21,7 @@ router.post('/pull/:repoName', function(req, res, next) {
     var repoPath = repo.path;
 
     // Open a repository that needs to be fetched and fast-forwarded
-    nodegit.Repository.open(path.resolve(__dirname, repoPath))
+    nodegit.Repository.open(repoPath)
         .then(function(repo) {
             repository = repo;
 
@@ -35,14 +35,22 @@ router.post('/pull/:repoName', function(req, res, next) {
                     }
                 }
             });
+
+        }, function (error) {
+            console.log(error);
+            res.status(500).send(error.message);
         })
+
         // Now that we're finished fetching, go ahead and merge our local branch
         // with the new one
         .then(function() {
             return repository.mergeBranches("master", "origin/master");
+        }, function (error) {
+            console.log(error);
+            res.status(500).send(error.message);
         })
+
         .done(function() {
-            console.log("Done!");
             res.status(200).send();
         });
 });

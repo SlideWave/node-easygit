@@ -7,7 +7,7 @@ var Config = {
 
 Config.reposByName = {};
 for (var i = 0, len = Config.repos.length; i < len; i++) {
-    Config.reposById[Config.repos[i].name] = Config.repos[i];
+    Config.reposByName[Config.repos[i].name] = Config.repos[i];
 }
 
 module.exports = Config;
