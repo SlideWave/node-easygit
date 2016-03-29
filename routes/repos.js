@@ -35,6 +35,7 @@ router.get('/status/:repoName', function(req, res, next) {
             });
         }).catch(function (error) {
             res.status(500).json({error: error});
+            throw error;
         });
 });
 
@@ -51,8 +52,8 @@ router.get('/', function(req, res, next) {
  * Performs a repository pull for the given repo
  */
 router.post('/pull/:repoName', function(req, res, next) {
-    var repo = Config.reposByName[req.params.repoName];
-    var repoPath = repo.path;
+    var repoConfig = Config.reposByName[req.params.repoName];
+    var repoPath = repoConfig.path;
 
     // Open a repository that needs to be fetched and fast-forwarded
     nodegit.Repository.open(repoPath)
@@ -62,7 +63,7 @@ router.post('/pull/:repoName', function(req, res, next) {
             return repository.fetchAll({
                 callbacks: {
                     credentials: function(url) {
-                        return nodegit.Cred.userpassPlaintextNew(repo.username, repo.password);
+                        return nodegit.Cred.userpassPlaintextNew(repoConfig.username, repoConfig.password);
                     },
                     certificateCheck: function() {
                         return 1;
@@ -82,9 +83,9 @@ router.post('/pull/:repoName', function(req, res, next) {
             var status = {oid: oid};
             res.status(200).json(status);
         }, function (error) {
-            console.log(error);
             var status = {message: error.message};
             res.status(500).json(status);
+            throw error;
         });
 });
 
@@ -92,7 +93,61 @@ router.post('/pull/:repoName', function(req, res, next) {
  * Performs a repository commit and push for the given repo
  */
 router.post('/commit/:repoName', function(req, res, next) {
+    var repoConfig = Config.reposByName[req.params.repoName];
+    var repoPath = repoConfig.path;
 
+    var sig = nodegit.Signature.now(repoConfig.fullname, repoConfig.email);
+    var index;
+    var oid;
+
+    nodegit.Repository.open(repoPath)
+        .then(function(repo) {
+            return repo.openIndex()
+                .then(function (idx) {
+                    index = idx;
+                    return index.addByPath(".")
+                })
+                .then(function () {
+                    return index.write();
+                })
+                .then(function () {
+                    return index.writeTree();
+                })
+                .then(function(oidResult) {
+                    oid = oidResult;
+                    return nodegit.Reference.nameToId(repo, "HEAD");
+                })
+                .then(function(head) {
+                    return repo.getCommit(head);
+                })
+                .then(function(parent) {
+                    return repo.createCommit("HEAD", sig, sig, "automated commit", oid, [parent]);
+                })
+                .then(function() {
+                    return repo.getRemote("origin");
+                })
+                .then(function(remote) {
+                    return remote.push(["refs/heads/master:refs/heads/master"],
+                    {
+                        callbacks: {
+                            credentials: function(url) {
+                                return nodegit.Cred.userpassPlaintextNew(repoConfig.username, repoConfig.password);
+                            },
+
+                            certificateCheck: function() {
+                                return 1;
+                            }
+                        }
+                    });
+                })
+
+        })
+        .done(function () {
+            res.status(200).json({status: "ok"});
+        }, function (error) {
+            res.status(500).json({message: error.message});
+            throw error;
+        })
 });
 
 /**

@@ -1,7 +1,10 @@
 var Config = {
     repos: [
-        {name: 'Sample Repo', path: '/home/user/sample', username: 'test', password: 'test'},
-        {name: 'Another Repo', path: '/home/user/another', username: 'test', password: 'test'}
+        {name: 'Sample Repo', path: '/home/user/sample', username: 'test',
+            password: 'test', fullname: 'Firstname Lastname', email: 'email@email.com'},
+
+        {name: 'Another Repo', path: '/home/user/another', username: 'test', password: 'test',
+            fullname: 'Firstname Lastname', email: 'email@email.com'}
     ]
 };
 

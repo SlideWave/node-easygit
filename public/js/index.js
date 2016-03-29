@@ -65,7 +65,19 @@ var RepoList = React.createClass({
     },
 
     onCommitClick: function(repoName) {
-
+        $.ajax({
+            url: this.props.commitUrl + '/' + encodeURIComponent(repoName),
+            type: 'post',
+            dataType: 'json',
+            cache: false,
+            success: function(data) {
+                this.props.showModal("Files", "Changes committed and pushed");
+            }.bind(this),
+            error: function(xhr, status, err) {
+                console.error(this.props.geturl, status, err.toString());
+                this.props.showModal("Error", err.toString());
+            }.bind(this)
+        });
     },
 
     onStatusClick: function(repoName) {
@@ -75,7 +87,12 @@ var RepoList = React.createClass({
             dataType: 'json',
             cache: false,
             success: function(data) {
-                this.props.showModal("Files", data.files.join("<br>"));
+                var status;
+
+                if (data.files.length > 0) status = data.files.join("<br>");
+                else status = "All up to date";
+
+                this.props.showModal("Files", status);
             }.bind(this),
             error: function(xhr, status, err) {
                 console.error(this.props.geturl, status, err.toString());
