@@ -36,22 +36,21 @@ router.post('/pull/:repoName', function(req, res, next) {
                 }
             });
 
-        }, function (error) {
-            console.log(error);
-            res.status(500).send(error.message);
         })
 
         // Now that we're finished fetching, go ahead and merge our local branch
         // with the new one
         .then(function() {
             return repository.mergeBranches("master", "origin/master");
-        }, function (error) {
-            console.log(error);
-            res.status(500).send(error.message);
         })
 
-        .done(function() {
-            res.status(200).send();
+        .done(function(oid) {
+            var status = {oid: oid};
+            res.status(200).send(status);
+        }, function (error) {
+            console.log(error);
+            var status = {message: error.message};
+            res.status(500).send(status);
         });
 });
 
@@ -63,6 +62,34 @@ router.post('/commit/:repoName', function(req, res, next) {
     var repository;
 
 
+});
+
+/**
+ * Gets the status of a repository
+ */
+router.get('/status/:repoName', function(req, res, next) {
+    var repoPath = Config.reposByName[req.params.repoName];
+    var repository;
+
+    nodegit.Repository.open(repoPath)
+        .then(function(repo) {
+            repo.getStatus().then(function(statuses) {
+                function statusToText(status) {
+                    var words = [];
+                    if (status.isNew()) { words.push("NEW"); }
+                    if (status.isModified()) { words.push("MODIFIED"); }
+                    if (status.isTypechange()) { words.push("TYPECHANGE"); }
+                    if (status.isRenamed()) { words.push("RENAMED"); }
+                    if (status.isIgnored()) { words.push("IGNORED"); }
+
+                    return words.join(" ");
+                }
+
+                statuses.forEach(function(file) {
+                    console.log(file.path() + " " + statusToText(file));
+                });
+            });
+        });
 });
 
 module.exports = router;
