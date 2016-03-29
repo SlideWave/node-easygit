@@ -85,19 +85,23 @@ var RepoList = React.createClass({
     },
 
     onRevertClick: function(repoName) {
-        $.ajax({
-            url: this.props.revertUrl + '/' + encodeURIComponent(repoName),
-            type: 'post',
-            dataType: 'json',
-            cache: false,
-            success: function(data) {
-                this.props.showModal("Reverted", "Changes were reverted");
-            }.bind(this),
-            error: function(xhr, status, err) {
-                console.error(this.props.geturl, status, err.toString());
-                this.props.showModal("Error", err.toString());
-            }.bind(this)
-        });
+        var ans = confirm("About to revert all local changes");
+
+        if (ans) {
+            $.ajax({
+                url: this.props.revertUrl + '/' + encodeURIComponent(repoName),
+                type: 'post',
+                dataType: 'json',
+                cache: false,
+                success: function(data) {
+                    this.props.showModal("Reverted", "Changes were reverted");
+                }.bind(this),
+                error: function(xhr, status, err) {
+                    console.error(this.props.geturl, status, err.toString());
+                    this.props.showModal("Error", err.toString());
+                }.bind(this)
+            });
+        }
     },
 
     render: function() {
