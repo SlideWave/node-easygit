@@ -99,13 +99,21 @@ router.post('/commit/:repoName', function(req, res, next) {
     var sig = nodegit.Signature.now(repoConfig.fullname, repoConfig.email);
     var index;
     var oid;
+    var files = [];
 
     nodegit.Repository.open(repoPath)
         .then(function(repo) {
             return repo.openIndex()
                 .then(function (idx) {
                     index = idx;
-                    return index.addByPath(".")
+                    return repo.getStatus();
+                })
+                .then(function (statuses) {
+                    statuses.forEach(function(file) {
+                        files.push(file.path());
+                    });
+
+                    return index.addAll(files);
                 })
                 .then(function () {
                     return index.write();
