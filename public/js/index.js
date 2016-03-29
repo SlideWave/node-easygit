@@ -2,19 +2,22 @@ var RepoLine = React.createClass({
     render: function() {
         return (
             <ReactBootstrap.Row className="repoRow">
-                <ReactBootstrap.Col xs={12} sm={6}>
+                <ReactBootstrap.Col xs={12} sm={4}>
                     <div className="repoName">
                         {this.props.project}
                     </div>
                 </ReactBootstrap.Col>
-                <ReactBootstrap.Col xs={12} sm={2}>
+                <ReactBootstrap.Col xs={3} sm={2}>
                     <ReactBootstrap.Button onClick={this.props.statusClick}>Status</ReactBootstrap.Button>
                 </ReactBootstrap.Col>
-                <ReactBootstrap.Col xs={12} sm={2}>
-                    <ReactBootstrap.Button onClick={this.props.commitClick}>Commit/Push</ReactBootstrap.Button>
+                <ReactBootstrap.Col xs={3} sm={2}>
+                    <ReactBootstrap.Button bsStyle="primary" onClick={this.props.commitClick}>Commit</ReactBootstrap.Button>
                 </ReactBootstrap.Col>
-                <ReactBootstrap.Col xs={12} sm={2}>
-                    <ReactBootstrap.Button onClick={this.props.pullClick}>Pull</ReactBootstrap.Button>
+                <ReactBootstrap.Col xs={3} sm={2}>
+                    <ReactBootstrap.Button bsStyle="primary" onClick={this.props.pullClick}>Pull</ReactBootstrap.Button>
+                </ReactBootstrap.Col>
+                <ReactBootstrap.Col xs={3} sm={2}>
+                    <ReactBootstrap.Button bsStyle="danger" onClick={this.props.revertClick}>Revert</ReactBootstrap.Button>
                 </ReactBootstrap.Col>
             </ReactBootstrap.Row>
         );
@@ -40,6 +43,7 @@ var RepoList = React.createClass({
             }.bind(this),
             error: function(xhr, status, err) {
                 console.error(this.props.geturl, status, err.toString());
+                this.props.showModal("Error", err.toString());
             }.bind(this)
         });
     },
@@ -55,6 +59,7 @@ var RepoList = React.createClass({
             }.bind(this),
             error: function(xhr, status, err) {
                 console.error(this.props.geturl, status, err.toString());
+                this.props.showModal("Error", err.toString());
             }.bind(this)
         });
     },
@@ -70,10 +75,27 @@ var RepoList = React.createClass({
             dataType: 'json',
             cache: false,
             success: function(data) {
-
+                this.props.showModal("Files", data.files.join("<br>"));
             }.bind(this),
             error: function(xhr, status, err) {
                 console.error(this.props.geturl, status, err.toString());
+                this.props.showModal("Error", err.toString());
+            }.bind(this)
+        });
+    },
+
+    onRevertClick: function(repoName) {
+        $.ajax({
+            url: this.props.revertUrl + '/' + encodeURIComponent(repoName),
+            type: 'post',
+            dataType: 'json',
+            cache: false,
+            success: function(data) {
+                this.props.showModal("Reverted", "Changes were reverted");
+            }.bind(this),
+            error: function(xhr, status, err) {
+                console.error(this.props.geturl, status, err.toString());
+                this.props.showModal("Error", err.toString());
             }.bind(this)
         });
     },
@@ -82,13 +104,15 @@ var RepoList = React.createClass({
         var opc = this.onPullClick;
         var occ = this.onCommitClick;
         var osc = this.onStatusClick;
+        var orc = this.onRevertClick;
 
         var repoNodes = this.state.repos.map(function(repo) {
             return (
                 <RepoLine project={repo.name} key={repo.name}
                           pullClick={() => opc(repo.name)}
                           commitClick={() => occ(repo.name)}
-                          statusClick={() => osc(repo.name)}>
+                          statusClick={() => osc(repo.name)}
+                          revertClick={() => orc(repo.name)}>
 
                 </RepoLine>
             );
@@ -136,11 +160,11 @@ const App = React.createClass({
         let doShowModal = (t, txt) => this.showModal(t, txt);
 
         return (
-            <div>
+            <div class="container">
                 <StatusModal showModal={this.state.modalShow} header={this.state.modalTitle}
                     content={this.state.modalText} onClose={modalClose} />
                 <RepoList geturl='/repos' pullUrl='/repos/pull' commitUrl='/repos/commit'
-                    statusUrl='/repos/status' showModal={doShowModal} />
+                    statusUrl='/repos/status' revertUrl='/repos/revert' showModal={doShowModal} />
             </div>
         );
     }
