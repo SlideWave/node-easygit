@@ -115,7 +115,7 @@ var StatusModal = React.createClass({
                     <p>{this.props.content}</p>
                  </ReactBootstrap.Modal.Body>
                 <ReactBootstrap.Modal.Footer>
-                    <ReactBootstrap.Button onClick={this.props.onHide}>Close</ReactBootstrap.Button>
+                    <ReactBootstrap.Button onClick={this.props.onClose}>Close</ReactBootstrap.Button>
                 </ReactBootstrap.Modal.Footer>
             </ReactBootstrap.Modal>
         );
@@ -138,10 +138,9 @@ const App = React.createClass({
         return (
             <div>
                 <StatusModal showModal={this.state.modalShow} header={this.state.modalTitle}
-                    content={this.state.modalText} />
+                    content={this.state.modalText} onClose={modalClose} />
                 <RepoList geturl='/repos' pullUrl='/repos/pull' commitUrl='/repos/commit'
-                    statusUrl='/repos/status' showModal={doShowModal}
-                    onClose={modalClose} />
+                    statusUrl='/repos/status' showModal={doShowModal} />
             </div>
         );
     }
