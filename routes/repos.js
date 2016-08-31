@@ -103,7 +103,7 @@ router.post('/commit/:repoName', function(req, res, next) {
 
     nodegit.Repository.open(repoPath)
         .then(function(repo) {
-            return repo.openIndex()
+            return repo.index()
                 .then(function (idx) {
                     index = idx;
                     return repo.getStatus();
